@@ -4,6 +4,7 @@ import json
 import os 
 
 import a_measure
+import voltage_measure
 import technical_recorder
 
 perioud = 2
@@ -23,7 +24,6 @@ def create_report(result):
     current_all = 0
     voltage_all = 0
     power_all = 0
-    print(result)
 
     for measure in result:
         current_all += result[measure]["current"]
@@ -44,6 +44,8 @@ def create_report(result):
     final_report["time_of_finish_measure"] = create_result_name()
     print(final_report)
     return final_report
+
+
 def main():
     count = 0 
     while 1:
@@ -51,6 +53,7 @@ def main():
         count+=1
         ram = technical_recorder.ram_measure()
         a = (a_measure.main())/1000
+        v = voltage_measure.main()
         p = a*v
         w_temp = p*perioud
         if count == 1:
