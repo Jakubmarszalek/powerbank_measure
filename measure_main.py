@@ -8,7 +8,7 @@ import voltage_measure
 import technical_recorder
 
 perioud = 2
-start_time = time.time()
+#start_time = time.time()
 result = {}
 
 start_voltage_value = 1 # voults
@@ -41,14 +41,14 @@ def create_report(result):
     voltage_average = voltage_all/number_of_measure
     power_average = power_all/number_of_measure
     all_energy_mAh = result[measure]["all_energy"] / 18
-    all_measure_time = result[measure]["measure_time"]
+    all_measure_time = result[measure]["all_measure_time"]
     final_report = {}
     final_report["current_average"] = current_average
     final_report["voltage_average"] = voltage_average
     final_report["power_average"] = power_average
     final_report["all_energy_mAh_5V"] = all_energy_mAh
     final_report["all_energy_Joule"] = result[measure]["all_energy"]
-    final_report["measurment_time"] = result[measure]["measure_time"]
+    final_report["all_measurment_time"] = result[measure]["all_measure_time"]
     final_report["time_of_finish_measure"] = create_result_name()
     print(final_report)
     return final_report
@@ -60,7 +60,9 @@ def main():
             print(f"Detected voltage bigger then {start_voltage_value}V, measure start:")
             break
         time.sleep(start_sleep_perioud)
-    count = 0 
+    count = 0
+    start_time = time.time()
+    perioud_time = time.time()
     while 1:
         time.sleep(perioud)
         count+=1
@@ -68,13 +70,17 @@ def main():
         a = (a_measure.main())/1000
         v = voltage_measure.main()
         p = a*v
-        w_temp = p*perioud
+        one_measure_time = time.time() - perioud_time
+        print(one_measure_time)
+        perioud_time = time.time()
+        w_temp = p * one_measure_time
         if count == 1:
             w_all = w_temp
         else:
             w_all = w_temp + result[count-1]["all_energy"]
-        measure_time = time.time() - start_time
-        result[count]={"current": a, "voltage": v, "power": p, "energy_in_perioud": w_temp, "all_energy": w_all, "measure_time": measure_time, "RAM using %": ram}
+        all_measure_time = time.time() - start_time
+        result[count]={"current": a, "voltage": v, "power": p, "energy_in_perioud": w_temp, "all_energy": w_all, "all_measure_time": all_measure_time, "RAM using %": ram,
+                        "single_measure_time": one_measure_time}
         print(result[count])
         if (result[count]["current"] < stop_current_value) or (result[count]["voltage"] < stop_voltage_value):
             output_name = create_result_name()
