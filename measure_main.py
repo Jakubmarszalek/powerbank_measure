@@ -2,27 +2,36 @@ import time
 import ina219
 import json
 import os 
+import argparse
 
 import a_measure
 import voltage_measure
 import technical_recorder
 
-perioud = 2
-#start_time = time.time()
+
+with open('config.json') as json_file:
+    config_values = json.load(json_file)
+perioud = config_values["perioud"]
+start_voltage_value = config_values["start_voltage_value"]
+start_sleep_perioud = config_values["start_sleep_perioud"]
+stop_current_value = config_values["stop_current_value"]
+stop_voltage_value = config_values["stop_voltage_value"]
+result_folder_name = config_values["result_folder_name"]
+
+
 result = {}
 
-start_voltage_value = 1 # voults
-start_sleep_perioud = 0.05
+def create_parser():
+    parser = argparse.ArgumentParser('Run behave in parallel mode for scenarios')
+    parser.add_argument('--name', '-n', action='store', required=False,
+                        help='name of folder with results', default="")
+    return parser
 
-stop_current_value = 0.1
-stop_voltage_value = 1
-
-result_folder_name = "results"
-
-
-def create_result_name():
+def create_result_name(individual_name = None):
     time_to_name = time.gmtime()
     name_file = f"{time_to_name.tm_year}_{time_to_name.tm_mon}_{time_to_name.tm_mday}_{time_to_name.tm_hour + 2}_{time_to_name.tm_min}_{time_to_name.tm_sec}"
+    if individual_name:
+        name_file = individual_name + name_file
     return name_file
 
 
@@ -55,6 +64,9 @@ def create_report(result):
 
 
 def main():
+    parser = create_parser()
+    args = parser.parse_args()
+    print("Waiting for voltage...")
     while 1:
         if voltage_measure.main() > start_voltage_value:
             print(f"Detected voltage bigger then {start_voltage_value}V, measure start:")
@@ -83,7 +95,7 @@ def main():
                         "single_measure_time": one_measure_time}
         print(result[count])
         if (result[count]["current"] < stop_current_value) or (result[count]["voltage"] < stop_voltage_value):
-            output_name = create_result_name()
+            output_name = create_result_name(args.name)
             script_localization = os.path.dirname(os.path.realpath(__file__))
             result_path = os.path.join(script_localization, result_folder_name, output_name)
             os.mkdir(result_path)

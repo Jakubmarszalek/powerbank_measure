@@ -14,7 +14,6 @@ voltage_lost_factor = 0.93
 
 def main():
     bit_voltage_value = mcp.read_adc(voltage_pin)
-    #print(bit_voltage_value)
     voltage_value = bit_voltage_value * bit_convertion
     voltage_value = voltage_value / voltage_lost_factor
     return voltage_value
