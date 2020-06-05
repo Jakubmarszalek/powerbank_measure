@@ -9,7 +9,8 @@ import voltage_measure
 import technical_recorder
 import lcd_screen
 
-with open('config.json') as json_file:
+
+with open('/home/pi/powerbank_measure/config.json') as json_file:
     config_values = json.load(json_file)
 perioud = config_values["perioud"]
 start_voltage_value = config_values["start_voltage_value"]
