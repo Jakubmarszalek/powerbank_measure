@@ -7,7 +7,7 @@ import argparse
 import a_measure
 import voltage_measure
 import technical_recorder
-
+import lcd_screen
 
 with open('config.json') as json_file:
     config_values = json.load(json_file)
@@ -59,7 +59,6 @@ def create_report(result):
     final_report["all_energy_Joule"] = result[measure]["all_energy"]
     final_report["all_measurment_time"] = result[measure]["all_measure_time"]
     final_report["time_of_finish_measure"] = create_result_name()
-    print(final_report)
     return final_report
 
 
@@ -67,9 +66,11 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
     print("Waiting for voltage...")
+    lcd_screen.message("Waiting for", "voltage...")
     while 1:
         if voltage_measure.main() > start_voltage_value:
             print(f"Detected voltage bigger then {start_voltage_value}V, measure start:")
+            lcd_screen.message("Detected voltage", "measure start")
             break
         time.sleep(start_sleep_perioud)
     count = 0
@@ -94,6 +95,7 @@ def main():
         result[count]={"current": a, "voltage": v, "power": p, "energy_in_perioud": w_temp, "all_energy": w_all, "all_measure_time": all_measure_time, "RAM using %": ram,
                         "single_measure_time": one_measure_time}
         print(result[count])
+        lcd_screen.measure_show(result[count]["voltage"], result[count]["current"], result[count]["all_measure_time"], result[count]["all_energy"]/18)
         if (result[count]["current"] < stop_current_value) or (result[count]["voltage"] < stop_voltage_value):
             output_name = create_result_name(args.name)
             script_localization = os.path.dirname(os.path.realpath(__file__))
@@ -102,6 +104,8 @@ def main():
             with open(os.path.join(result_path, "measure_data.json"), "w") as outfile:
                 json.dump(result, outfile)
             final_report = create_report(result)
+            print(final_report)
+            lcd_screen.final_info(final_report["all_measurment_time"], final_report["all_energy_mAh_5V"])
             with open(os.path.join(result_path, "final_report.json"), "w") as outfile:
                 json.dump(final_report, outfile)
             break
